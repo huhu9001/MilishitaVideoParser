@@ -1,5 +1,4 @@
 #pragma once
-
 #include<cstdint>
 #include<list>
 
@@ -11,12 +10,13 @@ public:
 		char c_type;
 	} note;
 
-	noteParser(unsigned width, unsigned height): notesOutput(notes), time_pre(0) {
-		SetSize(width, height);
+	noteParser(unsigned width, unsigned height, int new_linesize): notesOutput(notes) {
+		SetSize(width, height, new_linesize);
 	}
 
-	unsigned SetSize(unsigned new_width, unsigned new_height);
-	unsigned Input(int64_t time, int linesize, uint8_t const*frame0);
+	unsigned SetSize(unsigned new_width, unsigned new_height, int new_linesize);
+	unsigned Input(int64_t time, uint8_t const*frame0);
+	unsigned InputFinal();
 
 	std::list<note> const& notesOutput;
 protected:
@@ -44,43 +44,36 @@ protected:
 		x3_4mfocus_permy = 6016U,
 		x4_4mfocus_permy = 8059U;
 
-	enum Color { none, red, blue, yellow, green, black, white, mixed };
+	static const unsigned n_channels;
 
-	unsigned y_range, y_sigma;
+	unsigned y_sigma;
 
-	unsigned x_focus[6], y_bottom;
-	unsigned x_2pfocus[6], y_2pbottom;
-	unsigned x_2mfocus[6], y_2mbottom;
-	unsigned x_4mfocus[6], y_4mbottom;
+	unsigned x_center, x_2pcenter;
+	unsigned x_focus[6];
+	unsigned x_2pfocus[6];
+	unsigned x_2mfocus[6];
+	unsigned x_4mfocus[6];
+	unsigned y_focus, y_2pfocus;
 
-	class noteSus {
-	public:
-		noteSus(): pRedBefore(nullptr), isAfterIris(false) {}
-
-		int64_t t_FrontEnter, t_FrontExit, t_BackEnter, t_BackExit;
-		unsigned pos_Front;
-		unsigned countColor[mixed + 1];
-		char *pRedBefore;
-		bool isAfterIris;
-	};
+	int linesize;
 
 	std::list<note> notes;
-	std::list<noteSus> notesSus[6];
 
-	int64_t time_pre;
+	unsigned GetPixelIndex(unsigned n_channel, int x_offset, int y_offset) const;
+	unsigned GetCenterPixelIndex(int x_offset, int y_offset) const;
 
-	typedef struct RgbColor {
-		unsigned char r;
-		unsigned char g;
-		unsigned char b;
-	} RgbColor;
-	typedef struct HsvColor {
-		unsigned char h;
-		unsigned char s;
-		unsigned char v;
-	} HsvColor;
-	static HsvColor RgbToHsv(RgbColor rgb);
-	static Color RecogColor(HsvColor hsv);
-	Color GetPixel(uint8_t const*frame0, unsigned linesize, unsigned x, unsigned y);
-	static Color DecideColor(unsigned const countColor[mixed + 1]);
+	typedef struct Circle {
+		char c_type;
+		int x, y;
+		unsigned r;
+	} Circle;
+	std::list<Circle> circles[6];
+	unsigned CircleSeeker(uint8_t const*frame0);
+	unsigned StripeSeeker(uint8_t const*frame0);
+	unsigned CenterCircleSeeker(uint8_t const*frame0);
+	
+	std::list<char> c_notes[6];
+	std::list<std::list<int64_t>> t_notes[6];
+	std::list<std::list<int>> y_notes[6];
+	unsigned TimeNotes(int64_t time);
 };

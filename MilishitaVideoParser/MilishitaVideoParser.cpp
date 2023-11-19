@@ -1,4 +1,4 @@
-﻿#include "noteParser.hpp"
+﻿#include ".\\noteParser.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -11,9 +11,58 @@ extern "C" {
 #include<libavutil/imgutils.h>
 }
 
+#ifdef _DEBUG
+void SaveBmp(char const*filename, uint8_t const*frame, unsigned n_frame, int w, int h, int linesize) {
+	{
+		FILE* f;
+		int filesize = 54 + 3 * w * h;
+		unsigned char bmpfileheader[14] = { 'B','M', 0,0,0,0, 0,0,0,0, 54,0,0,0 };
+		unsigned char bmpinfoheader[40] = { 40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,24,0 };
+		char *bmpname;
+		memcpy(bmpfileheader + 2, &filesize, 4);
+		memcpy(bmpinfoheader + 4, &w, 4);
+		memcpy(bmpinfoheader + 8, &h, 4);
+		{
+			unsigned i;
+			for (i = 0; filename[i]; i++);
+			bmpname = (char*)malloc(i + 10);
+			memcpy(bmpname, filename, i);
+			for (unsigned j = i; j;) {
+				--j;
+				if (filename[j] == '\\' || filename[j] == ':') break;
+				else if (filename[j] == '.') {
+					i = j;
+					break;
+				}
+			}
+			bmpname[i++] = '_';
+			bmpname[i++] = 0x30 + n_frame % 10000 / 1000;
+			bmpname[i++] = 0x30 + n_frame % 1000 / 100;
+			bmpname[i++] = 0x30 + n_frame % 100 / 10;
+			bmpname[i++] = 0x30 + n_frame % 10;
+			bmpname[i++] = '.';
+			bmpname[i++] = 'b';
+			bmpname[i++] = 'm';
+			bmpname[i++] = 'p';
+			bmpname[i] = '\0';
+		}
+		fopen_s(&f, bmpname, "wb");
+		fwrite(bmpfileheader, 1, 14, f);
+		fwrite(bmpinfoheader, 1, 40, f);
+		//fwrite(frame, 1, 3 * w * h, f); //upside-down blue-red opposite
+		for (int i2 = h; --i2 != -1;) for (int i1 = 0; i1 < w; ++i1) {
+			fputc(frame[i1 * 3 + linesize * i2 + 2], f);
+			fputc(frame[i1 * 3 + linesize * i2 + 1], f);
+			fputc(frame[i1 * 3 + linesize * i2 + 0], f);
+		}
+		fclose(f);
+		free(bmpname);
+	}
+}
+#endif
+
 int decode(char const*filename) {
 	char *filename_output;
-	char const*const filename_default = "E:\\Print\\bandicam 2022-01-20 20-15-37-140.mp4";
 
 	AVFormatContext *ctx_format;
 
@@ -30,7 +79,6 @@ int decode(char const*filename) {
 	SwsContext *ctx_sws;
 
 	ctx_format = nullptr;
-	if (filename == nullptr)  filename = filename_default;
 	if (avformat_open_input(&ctx_format, filename, nullptr, nullptr)) {
 		std::cout << "Can not open file." << std::endl;
 		return -1;
@@ -44,7 +92,15 @@ int decode(char const*filename) {
 		unsigned i;
 		for (i = 0; filename[i]; i++);
 		filename_output = new char[i + 5];
-		for (i = 0; filename[i]; i++) filename_output[i] = filename[i];
+		memcpy(filename_output, filename, i);
+		for (unsigned j = i; j;) {
+			--j;
+			if (filename[j] == '\\' || filename[j] == ':') break;
+			else if (filename[j] == '.') {
+				i = j;
+				break;
+			}
+		}
 		filename_output[i++] = '.';
 		filename_output[i++] = 'a';
 		filename_output[i++] = 's';
@@ -90,7 +146,7 @@ int decode(char const*filename) {
 	av_image_alloc(frame_rgb->data, frame_rgb->linesize, ctx_codec->width, ctx_codec->height, AV_PIX_FMT_RGB24, 32);
 
 	{
-		noteParser np(ctx_codec->width, ctx_codec->height);
+		noteParser np(ctx_codec->width, ctx_codec->height, frame_rgb->linesize[0]);
 		unsigned n_frame = 0U - 1U;
 
 		while (av_read_frame(ctx_format, pkt) >= 0) {
@@ -118,12 +174,18 @@ int decode(char const*filename) {
 
 					{
 						++n_frame;
-						if (n_frame % 1000 == 0) std::cout << "frame: " << n_frame << std::endl;
-						//if (n_frame >= 2730 && n_frame <= 2764)
-						np.Input(
-							frame->pts * ctx_codec->framerate.den / ctx_codec->framerate.num,
-							frame_rgb->linesize[0],
-							frame_rgb->data[0]);
+						if (n_frame % 1000 == 0) std::cout << "frame: " << n_frame << " of " << vid_stream->nb_frames << std::endl;
+						np.Input(frame->pts * 1000 * vid_stream->time_base.num / vid_stream->time_base.den, frame_rgb->data[0]);
+
+#ifdef _DEBUG
+						{
+							bool savefile = false;
+							if (savefile || n_frame == -1) {
+								SaveBmp(filename, frame_rgb->data[0], n_frame, ctx_codec->width, ctx_codec->height, frame_rgb->linesize[0]);
+								return 0;
+							}
+						}
+#endif
 					}
 				}
 			}
@@ -148,8 +210,9 @@ int decode(char const*filename) {
 			f_o << "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text";
 
 			int64_t time_pre = 0;
+			np.InputFinal();
 			for (auto n_this = np.notesOutput.begin(); n_this != np.notesOutput.end(); ++n_this) {
-				if (!(n_this->time - time_pre <= 15 && time_pre - n_this->time <= 15)) {
+				if (!(n_this->time - time_pre <= 25 && time_pre - n_this->time <= 25)) {
 					f_o << std::endl;
 					f_o << "Dialogue: 0,";
 					f_o << n_this->time / 3600000;
@@ -196,5 +259,7 @@ int decode(char const*filename) {
 
 int main(int argc, char **argv)
 {
-	return decode(argv[1]);
+	int result;
+	for (int i = 1; i < argc; ++i) if (result = decode(argv[i])) return result;
+	return 0;
 }
