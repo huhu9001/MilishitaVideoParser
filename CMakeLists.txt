@@ -14,42 +14,42 @@ link_libraries(avcodec avformat swscale avutil)
 include_directories(SYSTEM ${DIR_FFMPEG}/include)
 
 add_executable(MilishitaVideoParser
-	MilishitaVideoParser/Circle.cpp
-	MilishitaVideoParser/CircleSeeker.cpp
-	MilishitaVideoParser/Color.cpp
-	MilishitaVideoParser/MilishitaVideoParser.cpp
+	MilishitaVideoParser/main.cpp
+	MilishitaVideoParser/circle.cpp
+	MilishitaVideoParser/color.cpp
 	MilishitaVideoParser/noteParser.cpp
-	MilishitaVideoParser/StripeSeeker.cpp
-	MilishitaVideoParser/TimeNotes.cpp
+	MilishitaVideoParser/noteParser_CircleSeeker.cpp
+	MilishitaVideoParser/noteParser_StripeSeeker.cpp
+	MilishitaVideoParser/noteParser_TimeNotes.cpp
 	MilishitaVideoParser/noteParser_mm.cpp
 )
 add_executable(MilishitaVideoParser_2m
-	MilishitaVideoParser/Circle.cpp
-	MilishitaVideoParser/CircleSeeker.cpp
-	MilishitaVideoParser/Color.cpp
-	MilishitaVideoParser/MilishitaVideoParser.cpp
+	MilishitaVideoParser/main.cpp
+	MilishitaVideoParser/circle.cpp
+	MilishitaVideoParser/color.cpp
 	MilishitaVideoParser/noteParser.cpp
-	MilishitaVideoParser/StripeSeeker.cpp
-	MilishitaVideoParser/TimeNotes.cpp
+	MilishitaVideoParser/noteParser_CircleSeeker.cpp
+	MilishitaVideoParser/noteParser_StripeSeeker.cpp
+	MilishitaVideoParser/noteParser_TimeNotes.cpp
 	MilishitaVideoParser_2m/noteParser_2m.cpp
 )
 add_executable(MilishitaVideoParser_2p
-	MilishitaVideoParser/Circle.cpp
-	MilishitaVideoParser/CircleSeeker.cpp
-	MilishitaVideoParser/Color.cpp
-	MilishitaVideoParser/MilishitaVideoParser.cpp
+	MilishitaVideoParser/main.cpp
+	MilishitaVideoParser/circle.cpp
+	MilishitaVideoParser/color.cpp
 	MilishitaVideoParser/noteParser.cpp
-	MilishitaVideoParser/StripeSeeker.cpp
-	MilishitaVideoParser/TimeNotes.cpp
+	MilishitaVideoParser/noteParser_CircleSeeker.cpp
+	MilishitaVideoParser/noteParser_StripeSeeker.cpp
+	MilishitaVideoParser/noteParser_TimeNotes.cpp
 	MilishitaVideoParser_2p/noteParser_2p.cpp
 )
 add_executable(MilishitaVideoParser_4m
-	MilishitaVideoParser/Circle.cpp
-	MilishitaVideoParser/CircleSeeker.cpp
-	MilishitaVideoParser/Color.cpp
-	MilishitaVideoParser/MilishitaVideoParser.cpp
+	MilishitaVideoParser/main.cpp
+	MilishitaVideoParser/circle.cpp
+	MilishitaVideoParser/color.cpp
 	MilishitaVideoParser/noteParser.cpp
-	MilishitaVideoParser/StripeSeeker.cpp
-	MilishitaVideoParser/TimeNotes.cpp
+	MilishitaVideoParser/noteParser_CircleSeeker.cpp
+	MilishitaVideoParser/noteParser_StripeSeeker.cpp
+	MilishitaVideoParser/noteParser_TimeNotes.cpp
 	MilishitaVideoParser_4m/noteParser_4m.cpp
 )

@@ -4,6 +4,8 @@
 
 class noteParser {
 public:
+	static int const time_error_permitted = 30U;
+
 	typedef struct {
 		int64_t time;
 		unsigned n_channel;

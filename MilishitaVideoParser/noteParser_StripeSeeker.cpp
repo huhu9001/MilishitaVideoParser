@@ -1,6 +1,6 @@
-#include".\\noteParser.hpp"
-#include".\\Color.hpp"
-#include".\\Circle.hpp"
+#include"noteParser.hpp"
+#include"color.hpp"
+#include"circle.hpp"
 
 bool IsStripeColor(HsvColor const&hsv) {
 	return

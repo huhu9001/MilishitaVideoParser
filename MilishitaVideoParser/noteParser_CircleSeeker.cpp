@@ -1,6 +1,6 @@
-#include".\\noteParser.hpp"
-#include".\\Color.hpp"
-#include".\\Circle.hpp"
+#include"noteParser.hpp"
+#include"color.hpp"
+#include"circle.hpp"
 
 enum NoteColor { white, red, blue, yellow, green, black };
 
@@ -64,8 +64,8 @@ unsigned noteParser::CircleSeeker(uint8_t const*frame0) {
 					char c_type;
 
 					x_this = 0, y_this = y_circle_1, dir_this = 6U;
-					for (unsigned i2 = 0;; ++i2) {
-						if (i2 >= 16U * y_sigma) goto label_retry;
+					for (unsigned i1 = 0;; ++i1) {
+						if (i1 >= 17U * y_sigma) goto label_retry;
 						for (int i = 0;; ++i) {
 							NoteColor c_dir = GetPixelColor(frame0 + GetPixelIndex(i0, x_this + diroff[dir_this][0], y_this + diroff[dir_this][1]));
 							if (c_dir == black) break;
@@ -81,7 +81,7 @@ unsigned noteParser::CircleSeeker(uint8_t const*frame0) {
 						x_this += diroff[dir_this][0], y_this += diroff[dir_this][1];
 						if (x_this == 0 && y_this == y_circle_1) break;
 						if ((x_this < 0 ? -x_this : x_this) > 6 * (int)y_sigma) goto label_retry;
-						if (y_this > 9 * (int)y_sigma || -y_this > 5 * (int)y_sigma) goto label_retry;
+						if (y_this > 9 * (int)y_sigma || -y_this > 6 * (int)y_sigma) goto label_retry;
 
 						if (y_this > y_up) x_up = x_this, y_up = y_this, nn_up = n_up, n_up = 1;
 						else if (y_this == y_up) x_up += x_this, ++n_up;

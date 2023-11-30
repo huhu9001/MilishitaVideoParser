@@ -1,4 +1,4 @@
-#include ".\\noteParser.hpp"
+#include"noteParser.hpp"
 
 unsigned noteParser::SetSize(unsigned new_width, unsigned new_height, int new_linesize) {
 	unsigned width, height;

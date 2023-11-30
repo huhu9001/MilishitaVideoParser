@@ -1,4 +1,4 @@
-#include".\\noteParser.hpp"
+#include"noteParser.hpp"
 
 bool IsSameNoteType(char c1, char c2) {
 	return c1 == c2 || (c1 == '\0' || c1 == '+' || c1 == '-') && (c2 == '\0' || c2 == '+' || c2 == '-');
@@ -75,15 +75,14 @@ unsigned noteParser::TimeNotes(int64_t time) {
 
 			time_note = CalcTime(*it1, *iy1);
 			if (time_note) {
-				int64_t const time_error = 25;
 				std::list<note>::iterator in1 = notes.end(), in2;
 			label_loopstart2:
 				if (in1 != notes.begin()) {
 					--in1;
-					if (in1->time - time_note >= time_error) goto label_loopstart2;
+					if (in1->time - time_note > time_error_permitted) goto label_loopstart2;
 					in2 = in1;
 				label_loopstart3:
-					if (time_note - in1->time < time_error) {
+					if (time_note - in1->time <= time_error_permitted) {
 						if (in1->n_channel == i0 && IsSameNoteType(in1->c_type, *icn1))
 							in1->time = (in1->time + time_note) / 2;
 						else if (in1 != notes.begin()) {

@@ -1,5 +1,4 @@
-#pragma once
-#include".\\Circle.hpp"
+#include"circle.hpp"
 
 int ICos(unsigned theta) {
 	return trigono[theta % (2 * n_trigono - 2) / (n_trigono - 1) == 0 ? theta % (n_trigono - 1) : (n_trigono - 1) - theta % (n_trigono - 1)] * ((theta + (n_trigono - 1)) / (2 * n_trigono - 2) % 2 == 0 ? 1 : -1);
