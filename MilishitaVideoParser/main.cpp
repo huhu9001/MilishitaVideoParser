@@ -1,9 +1,5 @@
 ﻿#include"noteParser.hpp"
 
-#include<iostream>
-#include<fstream>
-#include<iomanip>
-
 extern "C" {
 #include<libavcodec/avcodec.h>
 #include<libavformat/avformat.h>
@@ -11,8 +7,12 @@ extern "C" {
 #include<libavutil/imgutils.h>
 }
 
+#include<iostream>
+#include<fstream>
+#include<iomanip>
+
 #ifdef _DEBUG
-void SaveBmp(char const*filename, uint8_t const*frame, unsigned n_frame, int w, int h, int linesize) {
+static void SaveBmp(char const*filename, uint8_t const*frame, unsigned n_frame, int w, int h, int linesize) {
 	FILE* f;
 	int filesize = 54 + 3 * w * h;
 	unsigned char bmpfileheader[14] = { 'B','M', 0,0,0,0, 0,0,0,0, 54,0,0,0 };
@@ -24,7 +24,8 @@ void SaveBmp(char const*filename, uint8_t const*frame, unsigned n_frame, int w, 
 	{
 		unsigned i;
 		for (i = 0; filename[i]; i++);
-		bmpname = (char*)malloc(i + 10);
+		bmpname = (char*)malloc((size_t)i + 10);
+		if (bmpname == nullptr) return;
 		memcpy(bmpname, filename, i);
 		for (unsigned j = i; j;) {
 			--j;
@@ -46,19 +47,21 @@ void SaveBmp(char const*filename, uint8_t const*frame, unsigned n_frame, int w, 
 		bmpname[i] = '\0';
 	}
 	fopen_s(&f, bmpname, "wb");
-	fwrite(bmpfileheader, 1, 14, f);
-	fwrite(bmpinfoheader, 1, 40, f);
-	for (int i2 = h; --i2 != -1;) for (int i1 = 0; i1 < w; ++i1) {
-		fputc(frame[i1 * 3 + linesize * i2 + 2], f);
-		fputc(frame[i1 * 3 + linesize * i2 + 1], f);
-		fputc(frame[i1 * 3 + linesize * i2 + 0], f);
+	if (f != nullptr) {
+		fwrite(bmpfileheader, 1, 14, f);
+		fwrite(bmpinfoheader, 1, 40, f);
+		for (int i2 = h; --i2 != -1;) for (int i1 = 0; i1 < w; ++i1) {
+			fputc(frame[i1 * 3 + linesize * i2 + 2], f);
+			fputc(frame[i1 * 3 + linesize * i2 + 1], f);
+			fputc(frame[i1 * 3 + linesize * i2 + 0], f);
+		}
+		fclose(f);
 	}
-	fclose(f);
 	free(bmpname);
 }
 #endif
 
-int decode(char const*filename) {
+static int decode(char const*filename) {
 	char *filename_output;
 
 	AVFormatContext *ctx_format;
@@ -80,7 +83,7 @@ int decode(char const*filename) {
 		std::cout << "Can not open file." << std::endl;
 		return -1;
 	}
-	if (avformat_find_stream_info(ctx_format, nullptr)) {
+	if (avformat_find_stream_info(ctx_format, nullptr) < 0) {
 		std::cout << "Unsupported Format." << std::endl;
 		return -1;
 	}
@@ -88,7 +91,7 @@ int decode(char const*filename) {
 	{
 		unsigned i;
 		for (i = 0; filename[i]; i++);
-		filename_output = new char[i + 5];
+		filename_output = (char*)malloc((size_t)i + 5);
 		memcpy(filename_output, filename, i);
 		for (unsigned j = i; j;) {
 			--j;
@@ -188,6 +191,7 @@ int decode(char const*filename) {
 			}
 			av_packet_unref(pkt);
 		}
+		np.InputFinal();
 
 		{
 			std::ofstream f_o;
@@ -207,33 +211,32 @@ int decode(char const*filename) {
 			f_o << "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text";
 
 			int64_t time_pre = 0;
-			np.InputFinal();
-			for (auto n_this = np.notesOutput.begin(); n_this != np.notesOutput.end(); ++n_this) {
-				if (!(n_this->time - time_pre <= noteParser::time_error_permitted && time_pre - n_this->time <= noteParser::time_error_permitted)) {
+			for (noteParser::note const&n_this : np.notesOutput) {
+				if (!(n_this.time - time_pre <= noteParser::time_error_permitted && time_pre - n_this.time <= noteParser::time_error_permitted)) {
 					f_o << std::endl;
 					f_o << "Dialogue: 0,";
-					f_o << n_this->time / 3600000;
+					f_o << n_this.time / 3600000;
 					f_o << ':';
-					f_o << n_this->time / 60000 % 60;
+					f_o << n_this.time / 60000 % 60;
 					f_o << ':';
-					f_o << n_this->time / 1000 % 60;
+					f_o << n_this.time / 1000 % 60;
 					f_o << '.';
-					f_o << std::setw(3) << n_this->time % 1000 << std::setw(0);
+					f_o << std::setw(3) << n_this.time % 1000 << std::setw(0);
 					f_o << ',';
-					f_o << n_this->time / 3600000;
+					f_o << n_this.time / 3600000;
 					f_o << ':';
-					f_o << n_this->time / 60000 % 60;
+					f_o << n_this.time / 60000 % 60;
 					f_o << ':';
-					f_o << n_this->time / 1000 % 60;
+					f_o << n_this.time / 1000 % 60;
 					f_o << '.';
-					f_o << std::setw(3) << n_this->time % 1000 << std::setw(0);
+					f_o << std::setw(3) << n_this.time % 1000 << std::setw(0);
 					f_o << ",Default,,0,0,0,,";
 
-					time_pre = n_this->time;
+					time_pre = n_this.time;
 				}
 
-				f_o << n_this->n_channel + 1;
-				if (n_this->c_type) f_o << n_this->c_type;
+				f_o << n_this.n_channel + 1;
+				if (n_this.c_type) f_o << n_this.c_type;
 			}
 
 			f_o.close();
@@ -249,7 +252,7 @@ int decode(char const*filename) {
 	av_freep(frame_rgb->data);
 	av_frame_free(&frame_rgb);
 
-	delete[] filename_output;
+	free(filename_output);
 
 	return 0;
 }

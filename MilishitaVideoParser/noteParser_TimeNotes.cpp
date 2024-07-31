@@ -1,10 +1,10 @@
 #include"noteParser.hpp"
 
-bool IsSameNoteType(char c1, char c2) {
+static bool IsSameNoteType(char c1, char c2) {
 	return c1 == c2 || (c1 == '\0' || c1 == '+' || c1 == '-') && (c2 == '\0' || c2 == '+' || c2 == '-');
 }
 
-unsigned char IsSame(std::list<int64_t> const&t1, std::list<int> const&y1, int64_t t2, int y2) {
+static unsigned char IsSame(std::vector<int64_t> const&t1, std::vector<int> const&y1, int64_t t2, int y2) {
 	int64_t x, y, xx, yy, xy;
 	if (t1.size() == 0 || t1.size() != y1.size()) return 0;
 
@@ -19,9 +19,9 @@ unsigned char IsSame(std::list<int64_t> const&t1, std::list<int> const&y1, int64
 	return (unsigned char)((xy * 3 - x * y) * (xy * 3 - x * y) * 0xFF / (xx * 3 - x * x) / (yy * 3 - y * y));
 }
 
-int64_t CalcTime(std::list<int64_t> const&t_note, std::list<int> const&y_note) {
-	std::list<int64_t>::const_iterator i1;
-	std::list<int>::const_iterator i2;
+static int64_t CalcTime(std::vector<int64_t> const&t_note, std::vector<int> const&y_note) {
+	std::vector<int64_t>::const_iterator i1;
+	std::vector<int>::const_iterator i2;
 	int64_t t_av = 0;
 	int64_t y_av = 0;
 	int64_t num = 0;
@@ -45,10 +45,10 @@ int64_t CalcTime(std::list<int64_t> const&t_note, std::list<int> const&y_note) {
 
 unsigned noteParser::TimeNotes(int64_t time) {
 	for (unsigned i0 = 0; i0 < n_channels; ++i0) {
-		std::list<char>::iterator icn1 = c_notes[i0].begin();
-		std::list<std::list<int64_t>>::iterator it1 = t_notes[i0].begin();
-		std::list<std::list<int>>::iterator iy1 = y_notes[i0].begin();
-		std::list<Circle>::iterator icc1 = circles[i0].begin(), icc2;
+		std::vector<char>::iterator icn1 = c_notes[i0].begin();
+		std::vector<std::vector<int64_t>>::iterator it1 = t_notes[i0].begin();
+		std::vector<std::vector<int>>::iterator iy1 = y_notes[i0].begin();
+		std::vector<Circle>::iterator icc1 = circles[i0].begin(), icc2;
 		int64_t time_note;
 
 	label_loopstart:
@@ -75,7 +75,7 @@ unsigned noteParser::TimeNotes(int64_t time) {
 
 			time_note = CalcTime(*it1, *iy1);
 			if (time_note) {
-				std::list<note>::iterator in1 = notes.end(), in2;
+				std::vector<note>::iterator in1 = notes.end(), in2;
 			label_loopstart2:
 				if (in1 != notes.begin()) {
 					--in1;
@@ -93,7 +93,7 @@ unsigned noteParser::TimeNotes(int64_t time) {
 					}
 					else notes.insert(++in2, { time_note, i0, *icn1 });
 				}
-				else notes.push_front({ time_note, i0, *icn1 });
+				else notes.insert(in1, { time_note, i0, *icn1 });
 			}
 			icn1 = c_notes[i0].erase(icn1);
 			it1 = t_notes[i0].erase(it1);

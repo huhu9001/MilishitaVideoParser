@@ -4,7 +4,7 @@
 
 enum NoteColor { white, red, blue, yellow, green, black };
 
-NoteColor GetPixelColor(uint8_t const*pixel_in_frame) {
+static NoteColor GetPixelColor(uint8_t const*pixel_in_frame) {
 	unsigned const char thres_s_low = 64;
 	unsigned const char thres_s_high = 128;
 	unsigned const char thres_v_low = 20;

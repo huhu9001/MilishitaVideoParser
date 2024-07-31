@@ -15,41 +15,29 @@ include_directories(SYSTEM ${DIR_FFMPEG}/include)
 
 add_executable(MilishitaVideoParser
 	MilishitaVideoParser/main.cpp
-	MilishitaVideoParser/circle.cpp
-	MilishitaVideoParser/color.cpp
 	MilishitaVideoParser/noteParser.cpp
 	MilishitaVideoParser/noteParser_CircleSeeker.cpp
 	MilishitaVideoParser/noteParser_StripeSeeker.cpp
-	MilishitaVideoParser/noteParser_TimeNotes.cpp
-	MilishitaVideoParser/noteParser_mm.cpp
-)
+	MilishitaVideoParser/noteParser_TimeNotes.cpp)
+target_compile_definitions(MilishitaVideoParser PUBLIC DIFFICULTY_NAME=DMM)
 add_executable(MilishitaVideoParser_2m
 	MilishitaVideoParser/main.cpp
-	MilishitaVideoParser/circle.cpp
-	MilishitaVideoParser/color.cpp
 	MilishitaVideoParser/noteParser.cpp
 	MilishitaVideoParser/noteParser_CircleSeeker.cpp
 	MilishitaVideoParser/noteParser_StripeSeeker.cpp
-	MilishitaVideoParser/noteParser_TimeNotes.cpp
-	MilishitaVideoParser_2m/noteParser_2m.cpp
-)
+	MilishitaVideoParser/noteParser_TimeNotes.cpp)
+target_compile_definitions(MilishitaVideoParser_2m PUBLIC DIFFICULTY_NAME=D2M)
 add_executable(MilishitaVideoParser_2p
 	MilishitaVideoParser/main.cpp
-	MilishitaVideoParser/circle.cpp
-	MilishitaVideoParser/color.cpp
 	MilishitaVideoParser/noteParser.cpp
 	MilishitaVideoParser/noteParser_CircleSeeker.cpp
 	MilishitaVideoParser/noteParser_StripeSeeker.cpp
-	MilishitaVideoParser/noteParser_TimeNotes.cpp
-	MilishitaVideoParser_2p/noteParser_2p.cpp
-)
+	MilishitaVideoParser/noteParser_TimeNotes.cpp)
+target_compile_definitions(MilishitaVideoParser_2p PUBLIC DIFFICULTY_NAME=D2S)
 add_executable(MilishitaVideoParser_4m
 	MilishitaVideoParser/main.cpp
-	MilishitaVideoParser/circle.cpp
-	MilishitaVideoParser/color.cpp
 	MilishitaVideoParser/noteParser.cpp
 	MilishitaVideoParser/noteParser_CircleSeeker.cpp
 	MilishitaVideoParser/noteParser_StripeSeeker.cpp
-	MilishitaVideoParser/noteParser_TimeNotes.cpp
-	MilishitaVideoParser_4m/noteParser_4m.cpp
-)
+	MilishitaVideoParser/noteParser_TimeNotes.cpp)
+target_compile_definitions(MilishitaVideoParser_4m PUBLIC DIFFICULTY_NAME=D4M)
