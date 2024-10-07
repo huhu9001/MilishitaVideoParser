@@ -2,7 +2,9 @@
 #include"color.hpp"
 #include"circle.hpp"
 
-static bool IsStripeColor(HsvColor const&hsv) {
+#include<new>
+
+static bool IsStripeColor(HsvColor hsv) {
 	return
 		hsv.h >= 55 && hsv.h < 150 && hsv.s > 45 && hsv.s < 120 ||
 		hsv.h >= 40 && hsv.h < 55 && hsv.s > 45 && hsv.s < 175 ||
@@ -54,9 +56,9 @@ unsigned noteParser::StripeSeeker(uint8_t const*frame0) {
 							int y = y_src
 								- ((xx - xx_delta / 2) * x_num + x_den / 2) / x_den * x_step
 								+ ((yy - yy_offset) * y_num + y_den / 2) / y_den * y_step;
-							HsvColor hsv;
 							if (-y > 5 * (int)y_sigma) break;
-							if (IsStripeColor(hsv = RgbToHsv(*(RgbColor*)(frame0 + GetPixelIndex(i0, x, y))))) {
+							HsvColor hsv(*std::launder(reinterpret_cast<RgbColor const*>(frame0 + GetPixelIndex(i0, x, y))));
+							if (IsStripeColor(hsv)) {
 								if (hsv.l >= 0xA0) ++n_bright;
 								else ++n_dark;
 							}

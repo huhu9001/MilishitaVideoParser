@@ -45,6 +45,8 @@ unsigned noteParser::SetSize(unsigned new_width, unsigned new_height, int new_li
 
 	linesize = new_linesize;
 
+	notes.clear();
+
 	return 0;
 }
 

@@ -30,7 +30,7 @@ inline unsigned ISqrt(unsigned i) {
 		i1 >>= 2;
 		i0 <<= 1;
 	}
-	while (i0 >>= 1) if ((i0 | i1) * (i0 | i1) <= i) i1 |= i0;
+	while (i0 >>= 1) if (unsigned const i2 = i0 | i1; i2 * i2 <= i) i1 = i2;
 	return i1;
 }
 

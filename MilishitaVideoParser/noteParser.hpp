@@ -71,11 +71,11 @@ protected:
 	unsigned GetPixelIndex(unsigned n_channel, int x_offset, int y_offset) const;
 	unsigned GetCenterPixelIndex(int x_offset, int y_offset) const;
 
-	typedef struct Circle {
+	struct Circle {
 		char c_type;
 		int x, y;
 		unsigned r;
-	} Circle;
+	};
 	std::vector<Circle> circles[n_channels];
 	unsigned CircleSeeker(uint8_t const*frame0);
 	unsigned StripeSeeker(uint8_t const*frame0);

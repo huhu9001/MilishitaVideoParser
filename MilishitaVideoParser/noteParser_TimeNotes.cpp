@@ -89,11 +89,11 @@ unsigned noteParser::TimeNotes(int64_t time) {
 							--in1;
 							goto label_loopstart3;
 						}
-						else notes.insert(++in2, { time_note, i0, *icn1 });
+						else notes.emplace(++in2, time_note, i0, *icn1);
 					}
-					else notes.insert(++in2, { time_note, i0, *icn1 });
+					else notes.emplace(++in2, time_note, i0, *icn1);
 				}
-				else notes.insert(in1, { time_note, i0, *icn1 });
+				else notes.emplace(in1, time_note, i0, *icn1);
 			}
 			icn1 = c_notes[i0].erase(icn1);
 			it1 = t_notes[i0].erase(it1);

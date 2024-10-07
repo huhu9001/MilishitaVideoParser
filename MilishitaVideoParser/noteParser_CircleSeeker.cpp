@@ -2,6 +2,8 @@
 #include"color.hpp"
 #include"circle.hpp"
 
+#include<new>
+
 enum NoteColor { white, red, blue, yellow, green, black };
 
 static NoteColor GetPixelColor(uint8_t const*pixel_in_frame) {
@@ -10,7 +12,7 @@ static NoteColor GetPixelColor(uint8_t const*pixel_in_frame) {
 	unsigned const char thres_v_low = 20;
 	unsigned const char thres_v_high = 100;
 	unsigned const char thres_l = 100;
-	HsvColor hsv = RgbToHsv(*(RgbColor const*)pixel_in_frame);
+	HsvColor hsv(*std::launder(reinterpret_cast<RgbColor const*>(pixel_in_frame)));
 	if (hsv.l < thres_l) return black;
 	if (hsv.v > thres_v_high && hsv.s >= thres_s_low) {
 		if (hsv.h >= 55 && hsv.h <= 90) return green;
@@ -139,12 +141,7 @@ unsigned noteParser::CircleSeeker(uint8_t const*frame0) {
 							if (xy > (int)y_sigma / 2) goto label_retry;
 					}
 
-					circles[i0].push_back({ 
-						c_type,
-						x_up,
-						(y_left + y_right) / 2,
-						radius
-					});
+					circles[i0].emplace_back(c_type, x_up, (y_left + y_right) / 2, radius);
 				}
 				goto label_retry;
 			}
@@ -156,14 +153,16 @@ unsigned noteParser::CircleSeeker(uint8_t const*frame0) {
 }
 
 unsigned noteParser::CenterCircleSeeker(uint8_t const*frame0) {
-	for (int y = 23; y < 88; ) {
+	for (int y = 2 * (int)y_sigma; y < 7 * (int)y_sigma; ) {
 		unsigned r = (y_sigma * 703 - 11 * y) / 88;
 		for (unsigned i1 = 0; i1 < (4 * n_trigono - 4); ++i1) {
-			int icos = ICos(i1), isin = ISin(i1);
-			if (RgbToHsv(*(RgbColor const*)(frame0 + GetCenterPixelIndex((int)r * ICos(i1) / 10000, y + (int)r * ISin(i1) / 10000))).v < 0xF8)
+			int const xc = (int)r * ICos(i1) / 10000;
+			int const yc = y + (int)r * ISin(i1) / 10000;
+			int const offset = GetCenterPixelIndex(xc, yc);
+			if (HsvColor(*std::launder(reinterpret_cast<RgbColor const*>(frame0 + offset))).v < 0xF8)
 				goto label_nexty;
 		}
-		circles[0].push_back({ '!', 0, (int)y, r });
+		circles[0].emplace_back('!', 0, (int)y, r);
 		return 0;
 	label_nexty: ++y;
 	}
