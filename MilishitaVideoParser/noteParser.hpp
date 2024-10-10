@@ -6,7 +6,7 @@
 
 class noteParser {
 public:
-	static int constexpr time_error_permitted = 30U;
+	static int constexpr time_error_permitted = 30;
 
 	typedef struct {
 		int64_t time;

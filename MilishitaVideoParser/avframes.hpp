@@ -38,7 +38,9 @@ public:
 	int error() const noexcept { return error_code; }
 
 	void open(char const*filename) {
+		if (prepared) return;
 		error_code = 0;
+
 		if (pkt == nullptr || frame == nullptr || frame_rgb == nullptr) {
 			std::cerr << "av_packet_alloc/av_frame_alloc failed." << std::endl;
 			return;
@@ -77,12 +79,12 @@ public:
 
 		AVCodecContext*ctx_codec;
 		AVCodec*codec;
-		if (!(codec = avcodec_find_decoder(vid_stream->codecpar->codec_id))) {
+		if ((codec = avcodec_find_decoder(vid_stream->codecpar->codec_id)) == nullptr) {
 			std::cerr << "avcodec_find_decoder failed (unsupported format)." << std::endl;
 			avformat_close_input(&ctx_format);
 			return;
 		}
-		if (!(ctx_codec = avcodec_alloc_context3(codec))) {
+		if ((ctx_codec = avcodec_alloc_context3(codec)) == nullptr) {
 			std::cerr << "avcodec_alloc_context3 failed." << std::endl;
 			avformat_close_input(&ctx_format);
 			return;
@@ -105,14 +107,14 @@ public:
 		m_height = ctx_codec->height;
 
 		SwsContext *ctx_sws;
-		if (!(ctx_sws = sws_getContext(
+		if ((ctx_sws = sws_getContext(
 			ctx_codec->width,
 			ctx_codec->height,
 			ctx_codec->pix_fmt,
 			ctx_codec->width,
 			ctx_codec->height,
 			AV_PIX_FMT_RGB24,
-			SWS_BICUBIC, nullptr, nullptr, nullptr))) {
+			SWS_BICUBIC, nullptr, nullptr, nullptr)) == nullptr) {
 			std::cerr << "sws_getContext failed." << std::endl;
 			avcodec_free_context(&ctx_codec);
 			avformat_close_input(&ctx_format);
@@ -154,6 +156,8 @@ public:
 		sws_freeContext(init_temp.ctx_sws);
 		avcodec_free_context(&init_temp.ctx_codec);
 		avformat_close_input(&init_temp.ctx_format);
+
+		prepared = false;
 	}
 
 	template<typename Runnable, typename...Args> void run(Runnable func, Args...args) {
@@ -169,6 +173,7 @@ public:
 			args...);
 	}
 
+	bool ready() const noexcept { return prepared; }
 	int width() const noexcept { return m_width; }
 	int height() const noexcept { return m_height; }
 	int linesize() const noexcept { return m_linesize; }
@@ -214,9 +219,9 @@ private:
 		SwsContext *ctx_sws,
 		Runnable func,
 		Args...args) {
-		while (!av_read_frame(ctx_format, pkt)) {
+		while (av_read_frame(ctx_format, pkt) == 0) {
 			if (pkt->stream_index == stream_idx) {
-				if (int const err = avcodec_send_packet(ctx_codec, pkt); err) {
+				if (int const err = avcodec_send_packet(ctx_codec, pkt); err != 0) {
 					if (err != AVERROR_EOF) {
 						error_code = err;
 						std::cerr << "avcodec_send_packet failed." << std::endl;
@@ -225,7 +230,7 @@ private:
 					goto LB_RETIRING;
 				}
 				for (;;) {
-					if (int const err = avcodec_receive_frame(ctx_codec, frame); err) {
+					if (int const err = avcodec_receive_frame(ctx_codec, frame); err != 0) {
 						if (err == AVERROR(EAGAIN)) break;
 						else {
 							if (err != AVERROR_EOF) {
