@@ -8,6 +8,7 @@
 #include<libavutil/imgutils.h>
 }*/
 
+#include<cstring>
 #include<iostream>
 #include<fstream>
 #include<iomanip>
@@ -16,14 +17,15 @@
 #include<thread>
 
 static std::string FilenameNoExt(char const*original_name) {
-	unsigned i;
-	for (i = 0; original_name[i]; i++);
-	for (unsigned j = i; j;) {
-		--j;
-		if (original_name[j] == '\\' || original_name[j] == ':') break;
-		else if (original_name[j] == '.') {
-			i = j;
-			break;
+	unsigned i = 0;
+	while (original_name[i]) i += 1;
+	for (unsigned j = i; j > 0;) {
+		j -= 1;
+		switch (original_name[j]) {
+		case '.':
+			return std::string(original_name, j);
+		case '\\': case ':':
+			return std::string(original_name, i);
 		}
 	}
 	return std::string(original_name, i);
@@ -33,9 +35,9 @@ static void SaveBmp(char const*filename, uint8_t const*frame, int64_t n_frame, i
 	int const filesize = 54 + 3 * w * h;
 	char bmpfileheader[14] = { 'B','M', 0,0,0,0, 0,0,0,0, 54,0,0,0 };
 	char bmpinfoheader[40] = { 40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,24,0 };
-	memcpy(bmpfileheader + 2, &filesize, 4);
-	memcpy(bmpinfoheader + 4, &w, 4);
-	memcpy(bmpinfoheader + 8, &h, 4);
+	std::memcpy(bmpfileheader + 2, &filesize, 4);
+	std::memcpy(bmpinfoheader + 4, &w, 4);
+	std::memcpy(bmpinfoheader + 8, &h, 4);
 	std::ofstream f_o(FilenameNoExt(filename) + "_" + std::to_string(n_frame) + ".bmp", std::ios::binary);
 	f_o.write(bmpfileheader, 14);
 	f_o.write(bmpinfoheader, 40);
@@ -110,45 +112,53 @@ int main(int argc, char **argv) {
 			np.InputFinal();
 
 			if (fs.error() == 0) {
-				std::ofstream f_o(FilenameNoExt(argv[i]) + ".ass");
+				bool save_success;
+				{
+					std::ofstream f_o(FilenameNoExt(argv[i]) + ".ass");
 
-				f_o << std::setfill('0');
+					f_o << std::setfill('0');
 
-				f_o << "[Script Info]" << std::endl;
-				f_o << "Title: MLTD Notes" << std::endl;
-				f_o << "ScriptType: v4.00+" << std::endl;
-				f_o << "PlayResX: " << width << std::endl;
-				f_o << "PlayResY: " << height << std::endl;
-				f_o << std::endl << "[V4+ Styles]" << std::endl;
-				f_o << "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding" << std::endl;
-				f_o << "Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1" << std::endl;
-				f_o << std::endl << "[Events]" << std::endl;
-				f_o << "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text";
+					f_o << "[Script Info]" << std::endl;
+					f_o << "Title: MLTD Notes" << std::endl;
+					f_o << "ScriptType: v4.00+" << std::endl;
+					f_o << "PlayResX: " << width << std::endl;
+					f_o << "PlayResY: " << height << std::endl;
+					f_o << std::endl << "[V4+ Styles]" << std::endl;
+					f_o << "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding" << std::endl;
+					f_o << "Style: Default,Arial,20,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,10,1" << std::endl;
+					f_o << std::endl << "[Events]" << std::endl;
+					f_o << "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text";
 
-				for (int64_t time_pre = 0; noteParser::note const n_this : np.notesOutput) {
-					if (!(n_this.time - time_pre <= noteParser::time_error_permitted && time_pre - n_this.time <= noteParser::time_error_permitted)) {
-						f_o << std::endl;
-						f_o << "Dialogue: 0,";
+					for (int64_t time_pre = 0; noteParser::note const n_this : np.notesOutput) {
+						if (n_this.time - time_pre > noteParser::time_error_permitted || time_pre - n_this.time > noteParser::time_error_permitted) {
+							f_o << std::endl;
+							f_o << "Dialogue: 0,";
 
-						OutputTimestamp(f_o, n_this.time);
-						f_o << ',';
-						OutputTimestamp(f_o, n_this.time + noteParser::time_error_permitted);
+							OutputTimestamp(f_o, n_this.time);
+							f_o << ',';
+							OutputTimestamp(f_o, n_this.time + noteParser::time_error_permitted);
 
-						f_o << ",Default,,0,0,0,,";
+							f_o << ",Default,,0,0,0,,";
 
-						time_pre = n_this.time;
+							time_pre = n_this.time;
+						}
+
+						f_o << n_this.n_channel + 1;
+						if (n_this.c_type) f_o << n_this.c_type;
 					}
 
-					f_o << n_this.n_channel + 1;
-					if (n_this.c_type) f_o << n_this.c_type;
+					save_success = f_o.good();
 				}
 
 				thread_report.join();
-				std::cout << "Parsing of \"";
-				std::cout << argv[i];
-				std::cout << "\" succeeded";
-				std::cout << std::endl;
-				continue;
+				if (save_success) {
+					std::cout << "Parsing of \"";
+					std::cout << argv[i];
+					std::cout << "\" succeeded.";
+					std::cout << std::endl;
+					continue;
+				}
+				else std::cerr << "(Cannot save ASS file)." << std::endl;
 			}
 			else thread_report.join();
 		}

@@ -2,14 +2,12 @@
 #define AVFRAMES_HPP
 
 extern "C" {
-#include"../../ffmpeg/FFmpeg-master/libavcodec/avcodec.h"
-#include"../../ffmpeg/FFmpeg-master/libavformat/avformat.h"
-#include"../../ffmpeg/FFmpeg-master/libswscale/swscale.h"
-#include"../../ffmpeg/FFmpeg-master/libavutil/imgutils.h"
+#include"../ffmpeg/include/libavcodec/avcodec.h"
+#include"../ffmpeg/include/libavformat/avformat.h"
+#include"../ffmpeg/include/libswscale/swscale.h"
+#include"../ffmpeg/include/libavutil/imgutils.h"
 }
 
-#include<future>
-#include<atomic>
 #include<iostream>
 
 class Avframes {
@@ -143,10 +141,8 @@ public:
 		init_temp.ctx_format = ctx_format;
 
 		init_temp.stream_idx = stream_idx;
-		init_temp.vid_stream = vid_stream;
 
 		init_temp.ctx_codec = ctx_codec;
-		init_temp.codec = codec;
 
 		init_temp.ctx_sws = ctx_sws;
 	}
@@ -165,9 +161,7 @@ public:
 		prepare_frames(
 			init_temp.ctx_format,
 			init_temp.stream_idx,
-			init_temp.vid_stream,
 			init_temp.ctx_codec,
-			init_temp.codec,
 			init_temp.ctx_sws,
 			func,
 			args...);
@@ -202,10 +196,8 @@ private:
 		AVFormatContext*ctx_format;
 
 		int stream_idx;
-		AVStream*vid_stream;
 
 		AVCodecContext*ctx_codec;
-		AVCodec*codec;
 
 		SwsContext *ctx_sws;
 	} init_temp;
@@ -213,9 +205,7 @@ private:
 	template<typename Runnable, typename...Args> void prepare_frames(
 		AVFormatContext*ctx_format,
 		int stream_idx,
-		AVStream*vid_stream,
 		AVCodecContext*ctx_codec,
-		AVCodec*codec,
 		SwsContext *ctx_sws,
 		Runnable func,
 		Args...args) {

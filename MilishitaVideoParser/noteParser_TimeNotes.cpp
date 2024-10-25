@@ -26,7 +26,7 @@ static int64_t CalcTime(std::vector<int64_t> const&t_note, std::vector<int> cons
 	int64_t y_av = 0;
 	int64_t num = 0;
 	int64_t den = 0;
-	int64_t t0 = t_note.front(), y0 = y_note.front();
+	int64_t const t0 = t_note.front();
 
 	if (t_note.size() == 0 || t_note.size() != y_note.size()) return 0;
 	
