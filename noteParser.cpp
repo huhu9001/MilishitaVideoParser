@@ -1,6 +1,6 @@
 #include"noteParser.hpp"
 
-unsigned noteParser::SetSize(unsigned new_width, unsigned new_height, int new_linesize) {
+void noteParser::SetSize(unsigned new_width, unsigned new_height, int new_linesize) {
 	unsigned width, height;
 	unsigned x_offset, y_offset;
 
@@ -46,37 +46,10 @@ unsigned noteParser::SetSize(unsigned new_width, unsigned new_height, int new_li
 	linesize = new_linesize;
 
 	notes.clear();
-
-	return 0;
 }
 
-unsigned noteParser::Input(int64_t time, uint8_t const*frame0) {
-	CircleSeeker(frame0);
-	StripeSeeker(frame0);
-	CenterCircleSeeker(frame0);
-	TimeNotes(time);
-	return 0;
-}
-
-unsigned noteParser::InputFinal() {
+void noteParser::InputFinal() {
 	for (unsigned i = 0; i < n_channels; ++i) circles[i].clear();
 	TimeNotes(0);
-	return 0;
+	/* TODO: Left-right hand? */
 }
-
-unsigned noteParser::GetPixelIndex(unsigned n_channel, int x_offset, int y_offset) const {
-	if constexpr (dfct == dfcts::D2M)
-		return (x_2mfocus[n_channel] + x_offset) * 3 + (y_focus - y_offset) * linesize;
-	else if constexpr (dfct == dfcts::D2S)
-		return (y_2pfocus - y_offset) * 3 + (x_2pfocus[n_channel] - x_offset) * linesize;
-	else if constexpr (dfct == dfcts::D4M)
-		return (x_4mfocus[n_channel] + x_offset) * 3 + (y_focus - y_offset) * linesize;
-	else return (x_focus[n_channel] + x_offset) * 3 + (y_focus - y_offset) * linesize;
-}
-
-unsigned noteParser::GetCenterPixelIndex(int x_offset, int y_offset) const {
-	if constexpr (dfct == dfcts::D2S)
-		return (y_2pfocus - y_offset) * 3 + (x_2pcenter - x_offset) * linesize;
-	else return (x_center + x_offset) * 3 + (y_focus - y_offset) * linesize;
-}
-

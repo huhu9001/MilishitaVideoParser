@@ -2,10 +2,10 @@
 #define AVFRAMES_HPP
 
 extern "C" {
-#include"../ffmpeg/include/libavcodec/avcodec.h"
-#include"../ffmpeg/include/libavformat/avformat.h"
-#include"../ffmpeg/include/libswscale/swscale.h"
-#include"../ffmpeg/include/libavutil/imgutils.h"
+#include<libavcodec/avcodec.h>
+#include<libavformat/avformat.h>
+#include<libswscale/swscale.h>
+#include<libavutil/imgutils.h>
 }
 
 #include<iostream>
@@ -104,7 +104,7 @@ public:
 		m_width = ctx_codec->width;
 		m_height = ctx_codec->height;
 
-		SwsContext *ctx_sws;
+		SwsContext*ctx_sws;
 		if ((ctx_sws = sws_getContext(
 			ctx_codec->width,
 			ctx_codec->height,
@@ -199,14 +199,14 @@ private:
 
 		AVCodecContext*ctx_codec;
 
-		SwsContext *ctx_sws;
+		SwsContext*ctx_sws;
 	} init_temp;
 	
 	template<typename Runnable, typename...Args> void prepare_frames(
 		AVFormatContext*ctx_format,
 		int stream_idx,
 		AVCodecContext*ctx_codec,
-		SwsContext *ctx_sws,
+		SwsContext*ctx_sws,
 		Runnable func,
 		Args...args) {
 		while (av_read_frame(ctx_format, pkt) == 0) {

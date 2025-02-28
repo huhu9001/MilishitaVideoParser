@@ -8,22 +8,27 @@ class noteParser {
 public:
 	static int constexpr time_error_permitted = 30;
 
-	typedef struct {
+	struct note {
 		int64_t time;
 		unsigned n_channel;
 		char c_type;
-	} note;
+	};
 
-	noteParser(unsigned width, unsigned height, int new_linesize): notesOutput(notes) {
+	noteParser(unsigned width, unsigned height, int new_linesize) {
 		SetSize(width, height, new_linesize);
 		notes.reserve(0x800);
 	}
 
-	unsigned SetSize(unsigned new_width, unsigned new_height, int new_linesize);
-	unsigned Input(int64_t time, uint8_t const*frame0);
-	unsigned InputFinal();
+	void SetSize(unsigned new_width, unsigned new_height, int new_linesize);
+	void Input(int64_t time, uint8_t const*frame0) {
+		CircleSeeker(frame0);
+		StripeSeeker(frame0);
+		CenterCircleSeeker(frame0);
+		TimeNotes(time);
+	}
+	void InputFinal();
 
-	std::vector<note> const& notesOutput;
+	std::vector<note>const&result() { return notes; };
 protected:
 	enum dfcts { DMM, D2M, D2S, D4M } static constexpr dfct = DIFFICULTY_NAME;
 	static constexpr unsigned n_channels =
@@ -68,8 +73,20 @@ protected:
 
 	std::vector<note> notes;
 
-	unsigned GetPixelIndex(unsigned n_channel, int x_offset, int y_offset) const;
-	unsigned GetCenterPixelIndex(int x_offset, int y_offset) const;
+	unsigned GetPixelIndex(unsigned n_channel, int x_offset, int y_offset) const {
+		if constexpr (dfct == dfcts::D2M)
+			return (x_2mfocus[n_channel] + x_offset) * 3 + (y_focus - y_offset) * linesize;
+		else if constexpr (dfct == dfcts::D2S)
+			return (y_2pfocus - y_offset) * 3 + (x_2pfocus[n_channel] - x_offset) * linesize;
+		else if constexpr (dfct == dfcts::D4M)
+			return (x_4mfocus[n_channel] + x_offset) * 3 + (y_focus - y_offset) * linesize;
+		else return (x_focus[n_channel] + x_offset) * 3 + (y_focus - y_offset) * linesize;
+	}
+	unsigned GetCenterPixelIndex(int x_offset, int y_offset) const {
+		if constexpr (dfct == dfcts::D2S)
+			return (y_2pfocus - y_offset) * 3 + (x_2pcenter - x_offset) * linesize;
+		else return (x_center + x_offset) * 3 + (y_focus - y_offset) * linesize;
+	}
 
 	struct Circle {
 		char c_type;
@@ -77,14 +94,14 @@ protected:
 		unsigned r;
 	};
 	std::vector<Circle> circles[n_channels];
-	unsigned CircleSeeker(uint8_t const*frame0);
-	unsigned StripeSeeker(uint8_t const*frame0);
-	unsigned CenterCircleSeeker(uint8_t const*frame0);
+	void CircleSeeker(uint8_t const*frame0);
+	void StripeSeeker(uint8_t const*frame0);
+	void CenterCircleSeeker(uint8_t const*frame0);
 	
 	std::vector<char> c_notes[n_channels];
 	std::vector<std::vector<int64_t>> t_notes[n_channels];
 	std::vector<std::vector<int>> y_notes[n_channels];
-	unsigned TimeNotes(int64_t time);
+	void TimeNotes(int64_t time);
 };
 
 #endif

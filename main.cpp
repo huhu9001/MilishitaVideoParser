@@ -31,7 +31,14 @@ static std::string FilenameNoExt(char const*original_name) {
 	return std::string(original_name, i);
 }
 
-static void SaveBmp(char const*filename, uint8_t const*frame, int64_t n_frame, int w, int h, int linesize) {
+static void SaveBmp(
+	char const*filename,
+	uint8_t const*frame,
+	int64_t n_frame,
+	int w,
+	int h,
+	int linesize)
+{
 	int const filesize = 54 + 3 * w * h;
 	char bmpfileheader[14] = { 'B','M', 0,0,0,0, 0,0,0,0, 54,0,0,0 };
 	char bmpinfoheader[40] = { 40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0,24,0 };
@@ -75,11 +82,11 @@ static void decode_single_frame(int64_t time, uint8_t data[], noteParser*np) {
 	if (savefile) SaveBmp(filename, data, n_frame, width, height, linesize);
 #endif
 	np->Input(time, data);
-	n_frame += 1;
+	n_frame = n_frame + 1;
 }
 
 static void report_decode_progress() {
-	std::chrono::seconds constexpr one_second(1);
+	constexpr std::chrono::seconds one_second(1);
 	for (int64_t n; std::this_thread::sleep_for(one_second), (n = n_frame) != -1;)
 		std::cout << "frame: " << n << " of " << n_frame_all << std::endl;
 }
@@ -129,7 +136,7 @@ int main(int argc, char **argv) {
 					f_o << std::endl << "[Events]" << std::endl;
 					f_o << "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text";
 
-					for (int64_t time_pre = 0; noteParser::note const n_this : np.notesOutput) {
+					for (int64_t time_pre = 0; auto&n_this : np.result()) {
 						if (n_this.time - time_pre > noteParser::time_error_permitted || time_pre - n_this.time > noteParser::time_error_permitted) {
 							f_o << std::endl;
 							f_o << "Dialogue: 0,";
